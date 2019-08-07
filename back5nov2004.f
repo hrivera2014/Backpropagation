@@ -6,8 +6,11 @@ c to training artificial multilayer neural networks (3).
 c ia = training vector size y ia-1 # of 
 c neurons of first layer, ib= # of neurons of the hidden 
 c layer, ic= # of neurons of output layer.        
+
         parameter(ia=31,ib=20,ic=2)
-c Numbr of layer  and learning rate.       
+
+c Number of layers and learning rate.       
+
         parameter(inc=3,eta=-0.10)
         integer*4 iran
         real*8 xr
@@ -42,13 +45,7 @@ c        common /wei3/ pesos(ic,ib,3)
         common /grad2/ delta2(ib)
         common /grad3/ delta3(ic)
         real X1,X2,Y1,Y2
-        real*4 cr,cg,cb
-        real aspect,width
-        integer PGOPEN
-        integer PGQID
-        integer ID
-
-
+        
         iran=98377
         iunidad=16
         open(unit=9,file='random.dat')
@@ -68,7 +65,7 @@ c        call wei(ia,ia,1)
 c        call wei(ia,ib,2)
 c        call wei(ib,ic,3)
 
-c Random weigths initialisation between first layer input and first layer (Presentation layer or input layer) 
+c Random weigths initialisation between input layer and first layer (Presentation layer or input layer) 
 
         do j=1,ia
         do i=1,ia-1
@@ -241,17 +238,17 @@ c        write(33,*) sse
 
 c       Learning Stage
 c       Backpropagation of errors
-
-c ****** Fase de aprendisaje
-c ** Paso atrás; propagando lo errores hacia atrás. 
+c       Fase de aprendisaje
+c       Paso atrás; propagando lo errores hacia atrás. 
         
-c  1 Como influye el cambio de y3 en la capa de salida        
+c  1 How y3 change, influence the output layer.
+c  1 Como influye el cambio de y3 en la capa de salida.
 
         do i=1,ic
         delta3(i)=y3(i)*(1-y3(i))*(y3(i)-etiqueta(n,i))
 c        delta3(i)=y3(i)*(1-y3(i))*(y3(i)-etiqueta1(i))
         enddo 
-
+c  2 How y2 change, influence the hidden layer.
 c  2 Como influye el cambio de y2 en la capa oculta
 
         do j=1,ib+1
@@ -262,6 +259,7 @@ c  2 Como influye el cambio de y2 en la capa oculta
         delta2(j)=y2(j)*(1-y2(j))*sumdelta2
         enddo
 
+c  3 How y1 change, influence the input layer.
 c  3 Como influye el cambio de y1 en la capa de entrada
 
         do j=1,ia-1
