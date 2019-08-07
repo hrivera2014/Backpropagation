@@ -1,11 +1,13 @@
-c ******** Algoritmo de retropropagación de errores para el
+c Copyright 2019 Hender Rivera
+
+c ******** Algoritmo de retropropagaciÃ³n de errores para el
 c entrenamiento de redes neuronales artificiales multicapa. 
         implicit double precision (a-h,o-z)
 c ia=tamano del vector de entrenamiento y ia-1 # de 
 c neuronas de la primera capa, ib=# de neuronas de de la capa
 c oculta, ic=# de neuronas de la capa de salida.        
         parameter(ia=31,ib=20,ic=2)
-c Número de capas y coediciente de aprendisaje       
+c NÃºmero de capas y coediciente de aprendisaje       
         parameter(inc=3,eta=-0.10)
         integer*4 iran
         real*8 xr
@@ -56,12 +58,12 @@ c para esta semilla da
         open(unit=33,file='error_patron1.dat')
         open(unit=34,file='error_patron2.dat')
         
-c  Sección de Gráficos
+c  SecciÃ³n de GrÃ¡ficos
         if(graficos)then
-c  Apertura de la ventana gráfica
+c  Apertura de la ventana grÃ¡fica
         if (PGOPEN('/XSERVE') .le. 0) stop
 c       if (PGOPEN('salida.ps/PS').LE.0)STOP
-c  Borra todas las ventanas gráficas
+c  Borra todas las ventanas grÃ¡ficas
         call PGERAS
         call PGENV(0.0,itamano*1.0+1,0.0,jtamano*1.0,0,-1)
 c  Ajusta el aspect ratio AR=heigth/width
@@ -70,13 +72,13 @@ c  Ajusta el aspect ratio AR=heigth/width
         call PGPAP(aspect,width)
         endif
 
-c ****** Inicialización del los pesos
+c ****** InicializaciÃ³n del los pesos
 c        call wei(ia,ia,1)
 c        call wei(ia,ib,2)
 c        call wei(ib,ic,3)
 
-c Inicialización aleatoria de los pesos entre el vector de 
-c presentación y la primera capa
+c InicializaciÃ³n aleatoria de los pesos entre el vector de 
+c presentaciÃ³n y la primera capa
         do j=1,ia
         do i=1,ia-1
                 call rnd001(xr,iran,1)
@@ -92,7 +94,7 @@ c presentación y la primera capa
         enddo
         enddo
                 
-c Inicialización aleatoria de los pesos entre la capa de entrada 
+c InicializaciÃ³n aleatoria de los pesos entre la capa de entrada 
 c y la capa oculta
         do j=1,ia-1
         do i=1,ib
@@ -109,7 +111,7 @@ c y la capa oculta
         enddo
         enddo
 
-c Inicialización aleatoria de los pesos entre la capa oculta 
+c InicializaciÃ³n aleatoria de los pesos entre la capa oculta 
 c y la capa de salida
         do j=1,ib
         do i=1,ic
@@ -155,7 +157,7 @@ c  Lectura de los patrones de entrenamiento
         enddo
         enddo
        
-c       Lectura de las etiquetas ó salida deseada
+c       Lectura de las etiquetas Ã³ salida deseada
 
         read(12,*) etiqueta1(1),etiqueta1(2)
         read(13,*) etiqueta2(1),etiqueta2(2)
@@ -182,9 +184,9 @@ c        do 555 n=1,2
 c        call rnd001(xr,iran,2)
 c        n=xr
 
-c ****** Fase de presentación del patrón
+c ****** Fase de presentaciÃ³n del patrÃ³n
 c Suma ponderada de las entradas a las neuronas de la  primera capa
-c y la función de activación de esas neuronas
+c y la funciÃ³n de activaciÃ³n de esas neuronas
         y1(1)=1 
         do i=1,ia-1
         x1(i)=0
@@ -197,7 +199,7 @@ c        x1(i)=x1(i)+(pesos1(i,j)*vector1(j,l))
         enddo
 
 c Suma ponderada de las entradas a las neuronas de la capa oculta
-c y la función de activación de esas neuronas
+c y la funciÃ³n de activaciÃ³n de esas neuronas
         y2(1)=1
         do i=1,ib
         x2(i)=0
@@ -209,7 +211,7 @@ c y la función de activación de esas neuronas
         enddo
 
 c Suma ponderada de las entradas a las neuronas de la capa de salida
-c y la función de activación de esas neuronas
+c y la funciÃ³n de activaciÃ³n de esas neuronas
         do i=1,ic
         x3(i)=0
         y3(i)=0
@@ -218,7 +220,7 @@ c y la función de activación de esas neuronas
         enddo
         y3(i)=1/(1+exp(-1*x3(i)))
         enddo
-c Cálculo del error cuadrático medio
+c CÃ¡lculo del error cuadrÃ¡tico medio
         do i=1,ic
         sse=sse+(y3(i)-etiqueta(n,i))**2
 c        sse=sse+(y3(i)-etiqueta1(i))**2
@@ -231,7 +233,7 @@ c        if(mod(epoch,100).eq.0) write(34,*) sse
 c        write(33,*) sse
 
 c ****** Fase de aprendisaje
-c ** Paso atrás; propagando lo errores hacia atrás. 
+c ** Paso atrÃ¡s; propagando lo errores hacia atrÃ¡s. 
         
 c  1 Como influye el cambio de y3 en la capa de salida        
         do i=1,ic
@@ -257,7 +259,7 @@ c  3 Como influye el cambio de y1 en la capa de entrada
         delta1(j)=y1(j)*(1-y1(j))*sumdelta1
         enddo
 
-c *** Cálculo del ajuste de los pesos 
+c *** CÃ¡lculo del ajuste de los pesos 
 
 c 1 Calcula el ajuste de los pesos entre la capa de salida y la capa oculta
         do i=1,ib+1
@@ -330,7 +332,7 @@ c ***********************************************************
         n=2 
         do 444 l=1,10        
 c Suma ponderada de las entradas a las neuronas de la  primera capa
-c y la función de activación de esas neuronas
+c y la funciÃ³n de activaciÃ³n de esas neuronas
         y1(1)=1 
         do i=1,ia-1
         x1(i)=0
@@ -343,7 +345,7 @@ c        x1(i)=x1(i)+(pesos1(i,j)*vector1(j,l))
         enddo
 
 c Suma ponderada de las entradas a las neuronas de la capa oculta
-c y la función de activación de esas neuronas
+c y la funciÃ³n de activaciÃ³n de esas neuronas
         y2(1)=1
         do i=1,ib
         x2(i)=0
@@ -355,7 +357,7 @@ c y la función de activación de esas neuronas
         enddo
 
 c Suma ponderada de las entradas a las neuronas de la capa de salida
-c y la función de activación de esas neuronas
+c y la funciÃ³n de activaciÃ³n de esas neuronas
         do i=1,ic
         x3(i)=0
         y3(i)=0
@@ -388,7 +390,7 @@ c        e2=(y3(2)-etiqueta1(2))**2
 c---------------------------------------------------------------------72
 c                      Funciones y subrutinas
 c---------------------------------------------------------------------72
-c Función random
+c FunciÃ³n random
 
         subroutine rnd001(xi,i,ifin)
         integer*4 i,ifin
