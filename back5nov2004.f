@@ -7,7 +7,7 @@ c ia=tamano del vector de entrenamiento y ia-1 # de
 c neuronas de la primera capa, ib=# de neuronas de de la capa
 c oculta, ic=# de neuronas de la capa de salida.        
         parameter(ia=31,ib=20,ic=2)
-c Número de capas y coediciente de aprendisaje       
+c Número de capas y coeficiente de aprendisaje       
         parameter(inc=3,eta=-0.10)
         integer*4 iran
         real*8 xr
