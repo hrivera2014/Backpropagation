@@ -1,17 +1,22 @@
 c Copyright 2019 Hender Rivera
 
-c ******** Algoritmo de retropropagación de errores para el
-c entrenamiento de redes neuronales artificiales multicapa. 
+c ******** Algorithm for back propagation errors in order
+c to training artificial multilayer neural networks (3). 
         implicit double precision (a-h,o-z)
-c ia=tamano del vector de entrenamiento y ia-1 # de 
-c neuronas de la primera capa, ib=# de neuronas de de la capa
-c oculta, ic=# de neuronas de la capa de salida.        
+c ia = training vector size y ia-1 # of 
+c neurons of first layer, ib= # of neurons of the hidden 
+c layer, ic= # of neurons of output layer.        
         parameter(ia=31,ib=20,ic=2)
-c Número de capas y coeficiente de aprendisaje       
+c Numbr of layer  and learning rate.       
         parameter(inc=3,eta=-0.10)
         integer*4 iran
         real*8 xr
         real xm,sse
+        
+c       pesos == weigths
+c       etiquetas == tags
+c       ajustes = adjusts
+
 c        common /wei1/ pesos(ia-1,ia,1)
 c        common /wei2/ pesos(ib,ia-1,2)
 c        common /wei3/ pesos(ic,ib,3)
@@ -42,10 +47,9 @@ c        common /wei3/ pesos(ic,ib,3)
         integer PGOPEN
         integer PGQID
         integer ID
-        logical graficos
-c para esta semilla da        
+
+
         iran=98377
-        graficos=.false.
         iunidad=16
         open(unit=9,file='random.dat')
         open(unit=10,file='patron1.dat')
@@ -58,27 +62,14 @@ c para esta semilla da
         open(unit=33,file='error_patron1.dat')
         open(unit=34,file='error_patron2.dat')
         
-c  Sección de Gráficos
-        if(graficos)then
-c  Apertura de la ventana gráfica
-        if (PGOPEN('/XSERVE') .le. 0) stop
-c       if (PGOPEN('salida.ps/PS').LE.0)STOP
-c  Borra todas las ventanas gráficas
-        call PGERAS
-        call PGENV(0.0,itamano*1.0+1,0.0,jtamano*1.0,0,-1)
-c  Ajusta el aspect ratio AR=heigth/width
-        aspect=6
-        width=1
-        call PGPAP(aspect,width)
-        endif
 
-c ****** Inicialización del los pesos
+c ****** Weigths inicialisation
 c        call wei(ia,ia,1)
 c        call wei(ia,ib,2)
 c        call wei(ib,ic,3)
 
-c Inicialización aleatoria de los pesos entre el vector de 
-c presentación y la primera capa
+c Random weigths initialisation between first layer input and first layer (Presentation layer or input layer) 
+
         do j=1,ia
         do i=1,ia-1
                 call rnd001(xr,iran,1)
@@ -93,9 +84,9 @@ c presentación y la primera capa
                 pesos1(i,j)=xr
         enddo
         enddo
-                
-c Inicialización aleatoria de los pesos entre la capa de entrada 
-c y la capa oculta
+
+c Random weigths initialisation between first layer and the first hidden layer.
+
         do j=1,ia-1
         do i=1,ib
                 call rnd001(xr,iran,1)
@@ -111,8 +102,8 @@ c y la capa oculta
         enddo
         enddo
 
-c Inicialización aleatoria de los pesos entre la capa oculta 
-c y la capa de salida
+c Random weigths initialisation between hidden layer and the output layer.
+
         do j=1,ib
         do i=1,ic
                 call rnd001(xr,iran,1)
@@ -129,7 +120,7 @@ c y la capa de salida
         enddo
 
 c ****** 
-c  Asignacion de los Bias 
+c  Bias adjusting
         do j=1,10        
                 vector1(1,j)=1
                 vector2(1,j)=1
@@ -137,8 +128,9 @@ c  Asignacion de los Bias
                 vector(1,j,2)=1
         enddo
 
+c  Training Patterns reading
 c  Lectura de los patrones de entrenamiento
-        
+
         do i=2,ia
         read(10,100) vector1(i,1),vector1(i,2),vector1(i,3),
      + vector1(i,4),vector1(i,5),vector1(i,6),vector1(i,7),
@@ -158,6 +150,7 @@ c  Lectura de los patrones de entrenamiento
         enddo
        
 c       Lectura de las etiquetas ó salida deseada
+c       Reading of tags(etiquetas) or output target
 
         read(12,*) etiqueta1(1),etiqueta1(2)
         read(13,*) etiqueta2(1),etiqueta2(2)
@@ -167,7 +160,8 @@ c       Lectura de las etiquetas ó salida deseada
                 etiqueta(2,2)=etiqueta2(2)
 
 c ***********************************
-c   Fase de entrenamiento de la red
+c  Network training stage
+c  Fase de entrenamiento de la red
 c ***********************************
 
         epoch=0
@@ -184,9 +178,14 @@ c        do 555 n=1,2
 c        call rnd001(xr,iran,2)
 c        n=xr
 
+c       Pattern presentation stage
 c ****** Fase de presentación del patrón
+c Weighted sum of input to the first layer
+c and the activation functions of these neurons
+
 c Suma ponderada de las entradas a las neuronas de la  primera capa
 c y la función de activación de esas neuronas
+
         y1(1)=1 
         do i=1,ia-1
         x1(i)=0
@@ -197,9 +196,12 @@ c        x1(i)=x1(i)+(pesos1(i,j)*vector1(j,l))
         enddo
         y1(i+1)=1/(1+exp(-1*x1(i)))
         enddo
-
+        
+c Weighted sum of input to the hidden layer
+c and the activation functions of these neurons.
 c Suma ponderada de las entradas a las neuronas de la capa oculta
 c y la función de activación de esas neuronas
+
         y2(1)=1
         do i=1,ib
         x2(i)=0
@@ -210,8 +212,11 @@ c y la función de activación de esas neuronas
         y2(i+1)=1/(1+exp(-1*x2(i)))
         enddo
 
+c Weighted sum of input to the output layer
+c and the activation functions of these neurons.
 c Suma ponderada de las entradas a las neuronas de la capa de salida
 c y la función de activación de esas neuronas
+
         do i=1,ic
         x3(i)=0
         y3(i)=0
@@ -220,7 +225,9 @@ c y la función de activación de esas neuronas
         enddo
         y3(i)=1/(1+exp(-1*x3(i)))
         enddo
+c Asset of average cuadratic error
 c Cálculo del error cuadrático medio
+
         do i=1,ic
         sse=sse+(y3(i)-etiqueta(n,i))**2
 c        sse=sse+(y3(i)-etiqueta1(i))**2
@@ -232,16 +239,21 @@ c        sse=sse+(y3(i)-etiqueta1(i))**2
 c        if(mod(epoch,100).eq.0) write(34,*) sse
 c        write(33,*) sse
 
+c       Learning Stage
+c       Backpropagation of errors
+
 c ****** Fase de aprendisaje
 c ** Paso atrás; propagando lo errores hacia atrás. 
         
 c  1 Como influye el cambio de y3 en la capa de salida        
+
         do i=1,ic
         delta3(i)=y3(i)*(1-y3(i))*(y3(i)-etiqueta(n,i))
 c        delta3(i)=y3(i)*(1-y3(i))*(y3(i)-etiqueta1(i))
         enddo 
 
 c  2 Como influye el cambio de y2 en la capa oculta
+
         do j=1,ib+1
         sumdelta2=0
         do i=1,ic
@@ -251,6 +263,7 @@ c  2 Como influye el cambio de y2 en la capa oculta
         enddo
 
 c  3 Como influye el cambio de y1 en la capa de entrada
+
         do j=1,ia-1
         sumdelta1=0 
         do i=1,ib
@@ -259,6 +272,7 @@ c  3 Como influye el cambio de y1 en la capa de entrada
         delta1(j)=y1(j)*(1-y1(j))*sumdelta1
         enddo
 
+c Assestmen of weights adjusting
 c *** Cálculo del ajuste de los pesos 
 
 c 1 Calcula el ajuste de los pesos entre la capa de salida y la capa oculta
@@ -283,8 +297,11 @@ c        ajustew1(i,j)=eta*delta1(j)*vector1(i,l)
         enddo
         enddo
 
+c Weights adjjust.
 c *** Ajuste de los pesos
+
 c Se hacen los ajustes de los pesos 1
+
         do j=1,ia 
         do i=1,ia-1
         pesos1(i,j)=pesos1(i,j)+ajustew1(i,j) 
@@ -292,6 +309,7 @@ c Se hacen los ajustes de los pesos 1
         enddo
         
 c Se hacen los ajustes de los pesos 2
+
         do j=1,ia-1
         do i=1,ib
         pesos2(i,j)=pesos2(i,j)+ajustew2(i,j) 
@@ -299,6 +317,7 @@ c Se hacen los ajustes de los pesos 2
         enddo
 
 c Se hacen los ajustes de los pesos 3
+
         do j=1,ib
         do i=1,ic
         pesos3(i,j)=pesos3(i,j)+ajustew3(i,j) 
@@ -313,9 +332,11 @@ c 555    continue
 
         goto 80  
 
+c *** End of the progran ***
 c *** Fin del programa ***
  900    continue
 
+c Write of weigths
 c Escribe los pesos
 
         write (14,140) pesos1
@@ -326,13 +347,17 @@ c Escribe los pesos
  160    format(t1,2(1x,f9.3))
 
 
+
 c ***********************************************************
+c Recognition pattern stage after the network training.
 c Fase de reconocimiento de patrones una vez entrenada la red
 c ***********************************************************
+
         n=2 
         do 444 l=1,10        
 c Suma ponderada de las entradas a las neuronas de la  primera capa
 c y la función de activación de esas neuronas
+
         y1(1)=1 
         do i=1,ia-1
         x1(i)=0
@@ -346,6 +371,7 @@ c        x1(i)=x1(i)+(pesos1(i,j)*vector1(j,l))
 
 c Suma ponderada de las entradas a las neuronas de la capa oculta
 c y la función de activación de esas neuronas
+
         y2(1)=1
         do i=1,ib
         x2(i)=0
@@ -358,6 +384,7 @@ c y la función de activación de esas neuronas
 
 c Suma ponderada de las entradas a las neuronas de la capa de salida
 c y la función de activación de esas neuronas
+
         do i=1,ic
         x3(i)=0
         y3(i)=0
@@ -387,10 +414,12 @@ c        e2=(y3(2)-etiqueta1(2))**2
  444    continue        
         stop
         end
+
 c---------------------------------------------------------------------72
 c                      Funciones y subrutinas
 c---------------------------------------------------------------------72
-c Función random
+
+c Random function
 
         subroutine rnd001(xi,i,ifin)
         integer*4 i,ifin
