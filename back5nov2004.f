@@ -334,7 +334,7 @@ c *** End of the progran ***
 c *** Fin del programa ***
  900    continue
 
-c Write of weigths
+c Write the weigths
 c Escribe los pesos
 
         write (14,140) pesos1
