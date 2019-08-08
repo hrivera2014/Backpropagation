@@ -222,7 +222,7 @@ c y la función de activación de esas neuronas
         enddo
         y3(i)=1/(1+exp(-1*x3(i)))
         enddo
-c Asset of average cuadratic error
+c Assess of average cuadratic error
 c Cálculo del error cuadrático medio
 
         do i=1,ic
@@ -270,16 +270,17 @@ c  3 Como influye el cambio de y1 en la capa de entrada
         delta1(j)=y1(j)*(1-y1(j))*sumdelta1
         enddo
 
-c Assestmen of weights adjusting
+c Assesstmen of weights adjusting
 c *** Cálculo del ajuste de los pesos 
 
+c 1 Assess the adjust of weights between the output layer and hidden layer
 c 1 Calcula el ajuste de los pesos entre la capa de salida y la capa oculta
         do i=1,ib+1
         do j=1,ic
         ajustew3(i,j)=eta*delta3(j)*y2(i)
         enddo
         enddo
-        
+c 2 Assess the adjust of weights between the hidden layer and input layer        
 c 2 Calcula el ajuste de los pesos entre la capa oculta y la capa de entrada 
         do i=1,ia-1
         do j=1,ib+1
@@ -287,7 +288,8 @@ c 2 Calcula el ajuste de los pesos entre la capa oculta y la capa de entrada
         enddo
         enddo
 
-c 3 Calcula el ajuste de los pesos entre la capa oculta y la capa de entrada 
+c 3 Assess the adjust of weights between the presentation layer and input layer
+c 3 Calcula el ajuste de los pesos entre la capa de presentacio y la capa de entrada 
         do j=1,ia-1
         do i=1,ia
         ajustew1(i,j)=eta*delta1(j)*vector(i,l,n)
@@ -298,6 +300,7 @@ c        ajustew1(i,j)=eta*delta1(j)*vector1(i,l)
 c Weights adjjust.
 c *** Ajuste de los pesos
 
+c Weights 1 adjusts.
 c Se hacen los ajustes de los pesos 1
 
         do j=1,ia 
@@ -305,7 +308,8 @@ c Se hacen los ajustes de los pesos 1
         pesos1(i,j)=pesos1(i,j)+ajustew1(i,j) 
         enddo
         enddo
-        
+
+c Weights 2 adjusts.        
 c Se hacen los ajustes de los pesos 2
 
         do j=1,ia-1
@@ -314,6 +318,7 @@ c Se hacen los ajustes de los pesos 2
         enddo
         enddo
 
+c Weights 3 adjusts.
 c Se hacen los ajustes de los pesos 3
 
         do j=1,ib
@@ -353,6 +358,8 @@ c ***********************************************************
 
         n=2 
         do 444 l=1,10        
+
+c Weighted sum of input of the first layer neurons and activation functions of these neurons.
 c Suma ponderada de las entradas a las neuronas de la  primera capa
 c y la función de activación de esas neuronas
 
@@ -367,6 +374,7 @@ c        x1(i)=x1(i)+(pesos1(i,j)*vector1(j,l))
         y1(i+1)=1/(1+exp(-1*x1(i)))
         enddo
 
+c Weighted sum of input of the hidden layer neurons and activation functions of these neurons.
 c Suma ponderada de las entradas a las neuronas de la capa oculta
 c y la función de activación de esas neuronas
 
@@ -380,6 +388,7 @@ c y la función de activación de esas neuronas
         y2(i+1)=1/(1+exp(-1*x2(i)))
         enddo
 
+c Weighted sum of input of the output layer neurons and activation functions of these neurons.
 c Suma ponderada de las entradas a las neuronas de la capa de salida
 c y la función de activación de esas neuronas
 
@@ -414,6 +423,7 @@ c        e2=(y3(2)-etiqueta1(2))**2
         end
 
 c---------------------------------------------------------------------72
+c                      Functions and sobroutines.
 c                      Funciones y subrutinas
 c---------------------------------------------------------------------72
 
