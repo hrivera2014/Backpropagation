@@ -45,7 +45,7 @@ c        common /wei3/ pesos(ic,ib,3)
         common /grad2/ delta2(ib)
         common /grad3/ delta3(ic)
         real X1,X2,Y1,Y2
-        
+c---------------------------------------------------------------------72        
         iran=98377
         iunidad=16
         open(unit=9,file='random.dat')
