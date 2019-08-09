@@ -49,6 +49,7 @@ c        common /wei3/ pesos(ic,ib,3)
         iran=98377
         iunidad=16
         open(unit=9,file='random.dat')
+        c patron1 is a the data of a simulate signal of some undefined nature, same for patron2
         open(unit=10,file='patron1.dat')
         open(unit=11,file='patron2.dat')
         open(unit=12,file='etiqueta1.dat')
