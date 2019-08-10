@@ -1,7 +1,11 @@
 c Learning representations by back-propagating errors
 c  David E. Rumelhart, Geoffrey E. Hinton & Ronald J. Williams 
-c Naturevolume 323, pages533–536 (1986) 
+c Nature volume 323, pages533–536 (1986) 
 c https://www.nature.com/articles/323533a0
+
+c ...we still face the same question that were asked in 1953. Turing's question was what it would take for machines
+c to begin to think. Von Neuwmann's queston was what it would take for machines to begin to reproduce.
+c Turing's Cathedral. The origins of the digital universe. George Dyson. Pantheon books - New York.
 
 c Copyright 2019 Hender Rivera
 
