@@ -7,7 +7,7 @@ c ...we still face the same question that were asked in 1953. Turing's question 
 c to begin to think. Von Neuwmann's queston was what it would take for machines to begin to reproduce.
 c Turing's Cathedral. The origins of the digital universe. George Dyson. Pantheon books - New York.
 
-c WHAT HAPH GOD WROUGH
+c WHAT HATH GOD WROUGHT
 
 c Copyright 2019 Hender Rivera
 
