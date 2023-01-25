@@ -9,7 +9,7 @@ c Turing's Cathedral. The origins of the digital universe. George Dyson. Pantheo
 
 c WHAT HATH GOD WROUGHT
 
-c Copyright 2019 Hender Rivera
+c Hender Rivera
 
 c ******** Algorithm for back propagation errors in order
 c to training artificial multilayer neural networks (3). 
