@@ -14,9 +14,11 @@ c Hender Rivera
 c ******** Algorithm for back propagation errors in order
 c to training artificial multilayer neural networks (3). 
         implicit double precision (a-h,o-z)
-c ia = training vector size y ia-1 # of 
-c neurons of first layer, ib= # of neurons of the hidden 
-c layer, ic= # of neurons of output layer.        
+
+c ia = training vector size 
+c ia-1 = # of neurons of first layer
+c ib = # of neurons of the hidden layer 
+c ic = # of neurons of output layer.        
 
         parameter(ia=31,ib=20,ic=2)
 
@@ -128,7 +130,7 @@ c Random weigths initialisation between hidden layer and the output layer.
         enddo
         enddo
 
-c ****** 
+c ************************************
 c  Bias adjusting
         do j=1,10        
                 vector1(1,j)=1
@@ -364,7 +366,7 @@ c Escribe los pesos
 
 
 c ***********************************************************
-c Recognition pattern stage after the network training.
+c Pattern recognition stage after the network training.
 c Fase de reconocimiento de patrones una vez entrenada la red
 c ***********************************************************
 
