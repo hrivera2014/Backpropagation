@@ -1,5 +1,6 @@
+c CC BY-SA 4.0
 c Learning representations by back-propagating errors
-c  David E. Rumelhart, Geoffrey E. Hinton & Ronald J. Williams 
+c David E. Rumelhart, Geoffrey E. Hinton & Ronald J. Williams 
 c Nature volume 323, pages533–536 (1986) 
 c https://www.nature.com/articles/323533a0
 
