@@ -10,8 +10,6 @@ c Turing's Cathedral. The origins of the digital universe. George Dyson. Pantheo
 
 c WHAT HATH GOD WROUGHT
 
-c Hender Rivera
-
 c ******** Algorithm for back propagation errors in order
 c to training artificial multilayer neural networks (3). 
         implicit double precision (a-h,o-z)
@@ -59,11 +57,11 @@ c        common /wei3/ pesos(ic,ib,3)
         common /grad2/ delta2(ib)
         common /grad3/ delta3(ic)
         real X1,X2,Y1,Y2
-c---------------------------------------------------------------------72        
+c---------------------------------------------------------------------72
         iran=98377
         iunidad=16
         open(unit=9,file='random.dat')
-        c patron1 is a the data of a simulate signal of some undefined nature, same for patron2
+c patron1 is a the data of a simulate signal of some undefined nature, same for patron2
         open(unit=10,file='patron1.dat')
         open(unit=11,file='patron2.dat')
         open(unit=12,file='etiqueta1.dat')
@@ -117,18 +115,18 @@ c Random weigths initialisation between first layer and the first hidden layer.
 c Random weigths initialisation between hidden layer and the output layer.
 
         do j=1,ib
-        do i=1,ic
-                call rnd001(xr,iran,1)
-                sr=xr
-                call rnd001(xr,iran,1)
-                if(sr.lt.0.5)then
-                        s=-1
-                else
-                        s=1
+                do i=1,ic
+                        call rnd001(xr,iran,1)
+                        sr=xr
+                        call rnd001(xr,iran,1)
+                        if(sr.lt.0.5)then
+                                s=-1
+                        else
+                                s=1
                         endif
-                xr=xr*0.3*s
-                pesos3(i,j)=xr
-        enddo
+                        xr=xr*0.3*s
+                        pesos3(i,j)=xr
+                enddo
         enddo
 
 c ************************************
@@ -140,11 +138,12 @@ c  Bias adjusting
                 vector(1,j,2)=1
         enddo
 
+c---------------------------------------------------------------------72
 c  Training Patterns reading
 c  Lectura de los patrones de entrenamiento
 
         do i=2,ia
-        read(10,100) vector1(i,1),vector1(i,2),vector1(i,3),
+                read(10,100) vector1(i,1),vector1(i,2),vector1(i,3),
      + vector1(i,4),vector1(i,5),vector1(i,6),vector1(i,7),
      + vector1(i,8),vector1(i,9),vector1(i,10)   
         read(11,100) vector2(i,1),vector2(i,2),vector2(i,3),
