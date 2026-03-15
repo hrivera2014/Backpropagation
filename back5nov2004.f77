@@ -14,7 +14,7 @@ c WHAT HATH GOD WROUGHT
 
 c ******** Algorithm for back propagation errors in order
 c to training artificial multilayer neural networks (3). 
-        implicit double precision (a-h,o-z)
+		implicit double precision (a-h,o-z)
 
 c ia = training vector size 
 c ia-1 = # of neurons of first layer
@@ -82,53 +82,53 @@ c        call wei(ib,ic,3)
 
 c Random weigths initialization between input layer and first layer (Presentation layer or input layer) 
 
-        do j=1,ia
-                do i=1,ia-1
-                        call rnd001(xr,iran,1)
-                        sr=xr
-                        call rnd001(xr,iran,1)
-                        if(sr.lt.0.5)then
-                                s=-1
-                        else
-                                s=1
-                        endif
-                        xr=xr*0.3*s
-                        pesos1(i,j)=xr
-                enddo
-        enddo
+		do j=1,ia
+			do i=1,ia-1
+				call rnd001(xr,iran,1)
+				sr=xr
+				call rnd001(xr,iran,1)
+				if(sr.lt.0.5)then
+						s=-1
+				else
+						s=1
+				endif
+				xr=xr*0.3*s
+				pesos1(i,j)=xr
+			enddo
+		enddo
 
 c Random weigths initialization between first layer and the first hidden layer.
 
         do j=1,ia-1
-                do i=1,ib
-                        call rnd001(xr,iran,1)
-                        sr=xr
-                        call rnd001(xr,iran,1)
-                        if(sr.lt.0.5)then
-                                s=-1
-                        else
-                                s=1
-                        endif
-                        xr=xr*0.3*s
-                        pesos2(i,j)=xr
-                enddo
+			do i=1,ib
+				call rnd001(xr,iran,1)
+				sr=xr
+				call rnd001(xr,iran,1)
+				if(sr.lt.0.5)then
+						s=-1
+				else
+						s=1
+				endif
+				xr=xr*0.3*s
+				pesos2(i,j)=xr
+			enddo
         enddo
 
 c Random weigths initialization between hidden layer and the output layer.
 
         do j=1,ib
-                do i=1,ic
-                        call rnd001(xr,iran,1)
-                        sr=xr
-                        call rnd001(xr,iran,1)
-                        if(sr.lt.0.5)then
-                                s=-1
-                        else
-                                s=1
-                        endif
-                        xr=xr*0.3*s
-                        pesos3(i,j)=xr
-                enddo
+			do i=1,ic
+				call rnd001(xr,iran,1)
+				sr=xr
+				call rnd001(xr,iran,1)
+				if(sr.lt.0.5)then
+					s=-1
+				else
+					s=1
+				endif
+				xr=xr*0.3*s
+				pesos3(i,j)=xr
+			enddo
         enddo
 
 c ************************************
