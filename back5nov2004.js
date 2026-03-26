@@ -22,131 +22,113 @@
 //   ib   = # of neurons of the hidden layer                → 20
 //   ic   = # of neurons of the output layer                → 2
 // ─────────────────────────────────────────────────────────────
-const ia  = 31;
-const ib  = 20;
-const ic  = 2;
+const ia = 31;
+const ib = 20;
+const ic = 2;
 
 // learning rate (negative → gradient descent)
 
-const eta = -0.10;
+const eta = -0.1;
 
 // ─────────────────────────────────────────────────────────────
 // Helper utilities
 // ─────────────────────────────────────────────────────────────
 
 function rnd001(iran, ifin) {
-    // Fortran: i = i * 54891  (integer*4 wraps at 32-bit)
-    // JavaScript numbers are 64-bit floats, so we force 32-bit wrap.
-    //iran = Math.imul(iran, 54891) | 0;        // signed 32-bit multiply
-    //let xi = Math.random();
-    let xi;
-    xi = Math.random();
-    xi = xi * ifin;
-    return xi;
+  // Fortran: i = i * 54891  (integer*4 wraps at 32-bit)
+  // JavaScript numbers are 64-bit floats, so we force 32-bit wrap.
+  //iran = Math.imul(iran, 54891) | 0;        // signed 32-bit multiply
+  //let xi = Math.random();
+  let xi;
+  xi = Math.random();
+  xi = xi * ifin;
+  return xi;
 }
 
 /** Sigmoid activation function  σ(x) = 1 / (1 + e^−x) */
 function sigmoid(x) {
-    return 1.0 / (1.0 + Math.exp(-x));
-}
-
-/** Allocate a 2-D array (rows × cols) filled with 0 */
-function zeros2D(rows, cols) {
-    return Array.from({ length: rows }, () => new Array(cols).fill(0));
-}
-
-/** Allocate a 1-D array of length n filled with 0 */
-function zeros1D(n) {
-    return new Array(n).fill(0);
+  return 1.0 / (1.0 + Math.exp(-x));
 }
 
 // ─────────────────────────────────────────────────────────────
-// Weight matrices  (Fortran column-major → JS row-major; logic unchanged)
-//
-//   pesos1[i][j]  weights: input layer  → first layer   (ia-1) × ia
-//   pesos2[i][j]  weights: first layer  → hidden layer   ib    × (ia-1)
-//   pesos3[i][j]  weights: hidden layer → output layer   ic    × ib
-//
-// All arrays are 1-indexed inside the loops (Fortran style) to keep the
-// translation as direct as possible; index 0 is simply unused.
+// Weight matrices  (1-indexed; index 0 unused)
+//   pesos1[i][j]  input layer  → first layer   (ia-1) × ia
+//   pesos2[i][j]  first layer  → hidden layer   ib    × (ia-1)
+//   pesos3[i][j]  hidden layer → output layer   ic    × ib
+// Sub-arrays are empty; JS creates slots on first assignment.
 // ─────────────────────────────────────────────────────────────
-const pesos1    = zeros2D(ia,      ia + 1);   // [1..ia-1][1..ia]
-const pesos2    = zeros2D(ib + 1,  ia);        // [1..ib]  [1..ia-1]
-const pesos3    = zeros2D(ic + 1,  ib + 1);   // [1..ic]  [1..ib]
+const pesos1 = Array.from({ length: ia }, () => []); // [1..ia-1][1..ia]
+const pesos2 = Array.from({ length: ib + 1 }, () => []); // [1..ib]  [1..ia-1]
+const pesos3 = Array.from({ length: ic + 1 }, () => []); // [1..ic]  [1..ib]
 
-const ajustew1  = zeros2D(ia,      ia + 1);
-const ajustew2  = zeros2D(ib + 1,  ia);
-const ajustew3  = zeros2D(ic + 1,  ib + 1);
+// Adjustments — fully recomputed each iteration, no need to pre-fill
+const ajustew1 = Array.from({ length: ia }, () => []);
+const ajustew2 = Array.from({ length: ib + 1 }, () => []);
+const ajustew3 = Array.from({ length: ic + 1 }, () => []);
 
-// Training patterns:  vector[j][l][n]  j∈[1..ia], l∈[1..10], n∈{1,2}
-// Represented as vector[n][l][j]  (pattern type → sample → component)
-const vector    = [
-    null,                                      // n=0 unused
-    Array.from({ length: 11 }, () => zeros1D(ia + 1)),  // n=1
-    Array.from({ length: 11 }, () => zeros1D(ia + 1)),  // n=2
+// Training patterns: vector[n][l][j]  n∈{1,2}, l∈[1..10], j∈[1..ia]
+const vector = [
+  null, // n=0 unused
+  Array.from({ length: 11 }, () => []), // n=1
+  Array.from({ length: 11 }, () => []), // n=2
 ];
 
 // Labels / target outputs  etiqueta[n][i]  n∈{1,2}, i∈{1,2}
-const etiqueta  = [
-    null,
-    [0, 1, 0],   // n=1: [_unused_, target1, target2]
-    [0, 0, 1],   // n=2
+const etiqueta = [
+  null,
+  [0, 1, 0], // n=1: [_unused_, target1, target2]
+  [0, 0, 1], // n=2
 ];
 
-// Layer activations  (1-indexed; index 0 unused)
-const x1 = zeros1D(ia + 1);          // net input,  first layer
-const x2 = zeros1D(ib + 1);          // net input,  hidden layer
-const x3 = zeros1D(ic + 1);          // net input,  output layer
-const y1 = zeros1D(ia + 1);          // output,     first layer  (+bias slot at 0)
-const y2 = zeros1D(ib + 2);          // output,     hidden layer (+bias slot at 0)
-const y3 = zeros1D(ic + 1);          // output,     output layer
+// Layer activations — overwritten each forward pass, no pre-fill needed
+const x1 = []; // net input,  first layer
+const x2 = []; // net input,  hidden layer
+const x3 = []; // net input,  output layer
+const y1 = []; // output,     first layer  (y1[1]=1 bias set in forwardPass)
+const y2 = []; // output,     hidden layer (y2[1]=1 bias set in forwardPass)
+const y3 = []; // output,     output layer
 
-// Error gradients
-const delta1 = zeros1D(ia);
-const delta2 = zeros1D(ib + 2);
-const delta3 = zeros1D(ic + 1);
+// Error gradients — fully assigned each backprop pass
+const delta1 = [];
+const delta2 = [];
+const delta3 = [];
 
 // ─────────────────────────────────────────────────────────────
 // Weight initialisation  (random values in (−0.3, 0.3))
 // ─────────────────────────────────────────────────────────────
-let iran = 98377;
-
 // pesos1 : (ia-1) × ia
 for (let j = 1; j <= ia; j++) {
-    for (let i = 1; i <= ia - 1; i++) {
-        let r1 = rnd001(iran, 1);  iran = r1.iran;  const sr  = r1.xi;
-        let r2 = rnd001(iran, 1);  iran = r2.iran;
-        const s = sr < 0.5 ? -1 : 1;
-        pesos1[i][j] = r2.xi * 0.3 * s;
-    }
+  for (let i = 1; i <= ia - 1; i++) {
+    const sr = rnd001(1);
+    const s = sr < 0.5 ? -1 : 1;
+    pesos1[i][j] = rnd001(1) * 0.3 * s;
+  }
 }
 
 // pesos2 : ib × (ia-1)
 for (let j = 1; j <= ia - 1; j++) {
-    for (let i = 1; i <= ib; i++) {
-        let r1 = rnd001(iran, 1);  iran = r1.iran;  const sr  = r1.xi;
-        let r2 = rnd001(iran, 1);  iran = r2.iran;
-        const s = sr < 0.5 ? -1 : 1;
-        pesos2[i][j] = r2.xi * 0.3 * s;
-    }
+  for (let i = 1; i <= ib; i++) {
+    const sr = rnd001(1);
+    const s = sr < 0.5 ? -1 : 1;
+    pesos2[i][j] = rnd001(1) * 0.3 * s;
+  }
 }
 
 // pesos3 : ic × ib
 for (let j = 1; j <= ib; j++) {
-    for (let i = 1; i <= ic; i++) {
-        let r1 = rnd001(iran, 1);  iran = r1.iran;  const sr  = r1.xi;
-        let r2 = rnd001(iran, 1);  iran = r2.iran;
-        const s = sr < 0.5 ? -1 : 1;
-        pesos3[i][j] = r2.xi * 0.3 * s;
-    }
+  for (let i = 1; i <= ic; i++) {
+    const sr = rnd001(1);
+    const s = sr < 0.5 ? -1 : 1;
+    pesos3[i][j] = rnd001(1) * 0.3 * s;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
 // Bias nodes  (vector[n][l][1] = 1 for all l, both pattern types)
 // ─────────────────────────────────────────────────────────────
 for (let l = 1; l <= 10; l++) {
-    vector[1][l][1] = 1;
-    vector[2][l][1] = 1;
+  vector[1][l][1] = 1;
+  vector[2][l][1] = 1;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -170,12 +152,12 @@ for (let l = 1; l <= 10; l++) {
  * @param {number[][]} samples    – 10-element array; each element has 30 values
  */
 function loadPatterns(patternType, samples) {
-    for (let l = 1; l <= 10; l++) {
-        vector[patternType][l][1] = 1;                 // bias
-        for (let i = 2; i <= ia; i++) {
-            vector[patternType][l][i] = samples[l - 1][i - 2];
-        }
+  for (let l = 1; l <= 10; l++) {
+    vector[patternType][l][1] = 1; // bias
+    for (let i = 2; i <= ia; i++) {
+      vector[patternType][l][i] = samples[l - 1][i - 2];
     }
+  }
 }
 
 /**
@@ -185,8 +167,8 @@ function loadPatterns(patternType, samples) {
  * @param {number} t2  – desired output for output neuron 2
  */
 function loadLabels(patternType, t1, t2) {
-    etiqueta[patternType][1] = t1;
-    etiqueta[patternType][2] = t2;
+  etiqueta[patternType][1] = t1;
+  etiqueta[patternType][2] = t2;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -194,37 +176,37 @@ function loadLabels(patternType, t1, t2) {
 // Uses pattern class n, sample l.
 // ─────────────────────────────────────────────────────────────
 function forwardPass(n, l) {
-    // --- Layer 1 (presentation / input layer) ---
-    y1[1] = 1;   // bias
-    for (let i = 1; i <= ia - 1; i++) {
-        x1[i] = 0;
-        y1[i + 1] = 0;
-        for (let j = 1; j <= ia; j++) {
-            x1[i] += pesos1[i][j] * vector[n][l][j];
-        }
-        y1[i + 1] = sigmoid(x1[i]);
+  // --- Layer 1 (presentation / input layer) ---
+  y1[1] = 1; // bias
+  for (let i = 1; i <= ia - 1; i++) {
+    x1[i] = 0;
+    y1[i + 1] = 0;
+    for (let j = 1; j <= ia; j++) {
+      x1[i] += pesos1[i][j] * vector[n][l][j];
     }
+    y1[i + 1] = sigmoid(x1[i]);
+  }
 
-    // --- Hidden layer ---
-    y2[1] = 1;   // bias
-    for (let i = 1; i <= ib; i++) {
-        x2[i] = 0;
-        y2[i + 1] = 0;
-        for (let j = 1; j <= ia - 1; j++) {
-            x2[i] += pesos2[i][j] * y1[j];
-        }
-        y2[i + 1] = sigmoid(x2[i]);
+  // --- Hidden layer ---
+  y2[1] = 1; // bias
+  for (let i = 1; i <= ib; i++) {
+    x2[i] = 0;
+    y2[i + 1] = 0;
+    for (let j = 1; j <= ia - 1; j++) {
+      x2[i] += pesos2[i][j] * y1[j];
     }
+    y2[i + 1] = sigmoid(x2[i]);
+  }
 
-    // --- Output layer ---
-    for (let i = 1; i <= ic; i++) {
-        x3[i] = 0;
-        y3[i] = 0;
-        for (let j = 1; j <= ib; j++) {
-            x3[i] += pesos3[i][j] * y2[j];
-        }
-        y3[i] = sigmoid(x3[i]);
+  // --- Output layer ---
+  for (let i = 1; i <= ic; i++) {
+    x3[i] = 0;
+    y3[i] = 0;
+    for (let j = 1; j <= ib; j++) {
+      x3[i] += pesos3[i][j] * y2[j];
     }
+    y3[i] = sigmoid(x3[i]);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -233,105 +215,104 @@ function forwardPass(n, l) {
 // with the inner loop over l=1..10 for pattern class n=2.
 // ─────────────────────────────────────────────────────────────
 function train({ maxEpochs = 100000, targetSSE = 0.005 } = {}) {
-    let epoch = 0;
-    let sse   = 1;
+  let epoch = 0;
+  let sse = 1;
 
-    const n = 2;   // pattern class used (same as Fortran: n=2 hard-coded)
+  const n = 2; // pattern class used (same as Fortran: n=2 hard-coded)
 
-    while (epoch <= maxEpochs && sse >= targetSSE) {
-        epoch++;
+  while (epoch <= maxEpochs && sse >= targetSSE) {
+    epoch++;
 
-        // Inner loop over the 10 samples of pattern class n
-        for (let l = 1; l <= 10; l++) {
+    // Inner loop over the 10 samples of pattern class n
+    for (let l = 1; l <= 10; l++) {
+      // ── Forward pass ──────────────────────────────────────────
+      forwardPass(n, l);
 
-            // ── Forward pass ──────────────────────────────────────────
-            forwardPass(n, l);
+      // ── Sum of squared errors ─────────────────────────────────
+      sse = 0;
+      for (let i = 1; i <= ic; i++) {
+        sse += (y3[i] - etiqueta[n][i]) ** 2;
+      }
+      sse = 0.5 * sse;
 
-            // ── Sum of squared errors ─────────────────────────────────
-            sse = 0;
-            for (let i = 1; i <= ic; i++) {
-                sse += (y3[i] - etiqueta[n][i]) ** 2;
-            }
-            sse = 0.5 * sse;
+      // ── Backpropagation ───────────────────────────────────────
 
-            // ── Backpropagation ───────────────────────────────────────
+      // 1. Output layer deltas
+      for (let i = 1; i <= ic; i++) {
+        delta3[i] = y3[i] * (1 - y3[i]) * (y3[i] - etiqueta[n][i]);
+      }
 
-            // 1. Output layer deltas
-            for (let i = 1; i <= ic; i++) {
-                delta3[i] = y3[i] * (1 - y3[i]) * (y3[i] - etiqueta[n][i]);
-            }
-
-            // 2. Hidden layer deltas
-            for (let j = 1; j <= ib + 1; j++) {
-                let sumdelta2 = 0;
-                for (let i = 1; i <= ic; i++) {
-                    sumdelta2 += delta3[i] * pesos3[i][j];
-                }
-                delta2[j] = y2[j] * (1 - y2[j]) * sumdelta2;
-            }
-
-            // 3. First layer deltas
-            for (let j = 1; j <= ia - 1; j++) {
-                let sumdelta1 = 0;
-                for (let i = 1; i <= ib; i++) {
-                    sumdelta1 += delta2[i] * pesos2[i][j];
-                }
-                delta1[j] = y1[j] * (1 - y1[j]) * sumdelta1;
-            }
-
-            // ── Weight adjustments (Δw = η · δ · y) ──────────────────
-
-            // Adjustments pesos3  (hidden → output)
-            for (let i = 1; i <= ib + 1; i++) {
-                for (let j = 1; j <= ic; j++) {
-                    ajustew3[j][i] = eta * delta3[j] * y2[i];
-                }
-            }
-
-            // Adjustments pesos2  (first → hidden)
-            for (let i = 1; i <= ia - 1; i++) {
-                for (let j = 1; j <= ib + 1; j++) {
-                    ajustew2[j][i] = eta * delta2[j] * y1[i];
-                }
-            }
-
-            // Adjustments pesos1  (input → first)
-            for (let j = 1; j <= ia - 1; j++) {
-                for (let i = 1; i <= ia; i++) {
-                    ajustew1[j][i] = eta * delta1[j] * vector[n][l][i];
-                }
-            }
-
-            // ── Apply adjustments ────────────────────────────────────
-
-            // Update pesos1
-            for (let j = 1; j <= ia; j++) {
-                for (let i = 1; i <= ia - 1; i++) {
-                    pesos1[i][j] += ajustew1[i][j];
-                }
-            }
-
-            // Update pesos2
-            for (let j = 1; j <= ia - 1; j++) {
-                for (let i = 1; i <= ib; i++) {
-                    pesos2[i][j] += ajustew2[i][j];
-                }
-            }
-
-            // Update pesos3
-            for (let j = 1; j <= ib; j++) {
-                for (let i = 1; i <= ic; i++) {
-                    pesos3[i][j] += ajustew3[i][j];
-                }
-            }
-        } // end l loop
-
-        if (epoch % 100 === 0) {
-            console.log(`sse=${sse.toFixed(6)}  epoch=${epoch}`);
+      // 2. Hidden layer deltas
+      for (let j = 1; j <= ib + 1; j++) {
+        let sumdelta2 = 0;
+        for (let i = 1; i <= ic; i++) {
+          sumdelta2 += delta3[i] * pesos3[i][j];
         }
-    } // end epoch loop
+        delta2[j] = y2[j] * (1 - y2[j]) * sumdelta2;
+      }
 
-    return { epoch, sse };
+      // 3. First layer deltas
+      for (let j = 1; j <= ia - 1; j++) {
+        let sumdelta1 = 0;
+        for (let i = 1; i <= ib; i++) {
+          sumdelta1 += delta2[i] * pesos2[i][j];
+        }
+        delta1[j] = y1[j] * (1 - y1[j]) * sumdelta1;
+      }
+
+      // ── Weight adjustments (Δw = η · δ · y) ──────────────────
+
+      // Adjustments pesos3  (hidden → output)
+      for (let i = 1; i <= ib + 1; i++) {
+        for (let j = 1; j <= ic; j++) {
+          ajustew3[j][i] = eta * delta3[j] * y2[i];
+        }
+      }
+
+      // Adjustments pesos2  (first → hidden)
+      for (let i = 1; i <= ia - 1; i++) {
+        for (let j = 1; j <= ib + 1; j++) {
+          ajustew2[j][i] = eta * delta2[j] * y1[i];
+        }
+      }
+
+      // Adjustments pesos1  (input → first)
+      for (let j = 1; j <= ia - 1; j++) {
+        for (let i = 1; i <= ia; i++) {
+          ajustew1[j][i] = eta * delta1[j] * vector[n][l][i];
+        }
+      }
+
+      // ── Apply adjustments ────────────────────────────────────
+
+      // Update pesos1
+      for (let j = 1; j <= ia; j++) {
+        for (let i = 1; i <= ia - 1; i++) {
+          pesos1[i][j] += ajustew1[i][j];
+        }
+      }
+
+      // Update pesos2
+      for (let j = 1; j <= ia - 1; j++) {
+        for (let i = 1; i <= ib; i++) {
+          pesos2[i][j] += ajustew2[i][j];
+        }
+      }
+
+      // Update pesos3
+      for (let j = 1; j <= ib; j++) {
+        for (let i = 1; i <= ic; i++) {
+          pesos3[i][j] += ajustew3[i][j];
+        }
+      }
+    } // end l loop
+
+    if (epoch % 100 === 0) {
+      console.log(`sse=${sse.toFixed(6)}  epoch=${epoch}`);
+    }
+  } // end epoch loop
+
+  return { epoch, sse };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -339,41 +320,39 @@ function train({ maxEpochs = 100000, targetSSE = 0.005 } = {}) {
 // Mirrors the Fortran section starting after label 900.
 // ─────────────────────────────────────────────────────────────
 function recognise({ patternType = 2, sseThreshold = 0.02 } = {}) {
-    const n = patternType;
-    const results = [];
+  const n = patternType;
+  const results = [];
 
-    for (let l = 1; l <= 10; l++) {
-        forwardPass(n, l);
+  for (let l = 1; l <= 10; l++) {
+    forwardPass(n, l);
 
-        const e1  = (y3[1] - etiqueta[n][1]) ** 2;
-        const e2  = (y3[2] - etiqueta[n][2]) ** 2;
-        const sse = 0.5 * (e1 + e2);
+    const e1 = (y3[1] - etiqueta[n][1]) ** 2;
+    const e2 = (y3[2] - etiqueta[n][2]) ** 2;
+    const sse = 0.5 * (e1 + e2);
 
-        const recognised = sse < sseThreshold;
-        const label = recognised
-            ? `pattern ${n}`
-            : 'unrecognised';
+    const recognised = sse < sseThreshold;
+    const label = recognised ? `pattern ${n}` : "unrecognised";
 
-        results.push({
-            sample    : l,
-            label,
-            recognised,
-            y3_1      : y3[1],
-            y3_2      : y3[2],
-            target1   : etiqueta[n][1],
-            target2   : etiqueta[n][2],
-            sse,
-        });
+    results.push({
+      sample: l,
+      label,
+      recognised,
+      y3_1: y3[1],
+      y3_2: y3[2],
+      target1: etiqueta[n][1],
+      target2: etiqueta[n][2],
+      sse,
+    });
 
-        console.log(
-            `${l.toString().padStart(4)}  ${label.padEnd(14)}` +
-            `  y31=${y3[1].toFixed(3)}  y32=${y3[2].toFixed(3)}` +
-            `  targets=[${etiqueta[n][1].toFixed(1)}, ${etiqueta[n][2].toFixed(1)}]` +
-            `  sse=${sse.toFixed(3)}`
-        );
-    }
+    console.log(
+      `${l.toString().padStart(4)}  ${label.padEnd(14)}` +
+        `  y31=${y3[1].toFixed(3)}  y32=${y3[2].toFixed(3)}` +
+        `  targets=[${etiqueta[n][1].toFixed(1)}, ${etiqueta[n][2].toFixed(1)}]` +
+        `  sse=${sse.toFixed(3)}`,
+    );
+  }
 
-    return results;
+  return results;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -387,21 +366,20 @@ module.exports = { loadPatterns, loadLabels, train, recognise };
 // exercised without external data files.
 // ─────────────────────────────────────────────────────────────
 if (require.main === module) {
-    // Build two toy pattern classes with random values in [0,1]
-    const rand = () => Math.random();
-    const makePatterns = () =>
-        Array.from({ length: 10 }, () =>
-            Array.from({ length: 30 }, rand));
+  // Build two toy pattern classes with random values in [0,1]
+  const rand = () => Math.random();
+  const makePatterns = () =>
+    Array.from({ length: 10 }, () => Array.from({ length: 30 }, rand));
 
-    loadPatterns(1, makePatterns());
-    loadPatterns(2, makePatterns());
-    loadLabels(1, 1, 0);
-    loadLabels(2, 0, 1);
+  loadPatterns(1, makePatterns());
+  loadPatterns(2, makePatterns());
+  loadLabels(1, 1, 0);
+  loadLabels(2, 0, 1);
 
-    console.log('=== Training ===');
-    const { epoch, sse } = train({ maxEpochs: 100000, targetSSE: 0.005 });
-    console.log(`\nTraining finished: epoch=${epoch}  sse=${sse.toFixed(6)}\n`);
+  console.log("=== Training ===");
+  const { epoch, sse } = train({ maxEpochs: 100000, targetSSE: 0.005 });
+  console.log(`\nTraining finished: epoch=${epoch}  sse=${sse.toFixed(6)}\n`);
 
-    console.log('=== Recognition ===');
-    recognise({ patternType: 2, sseThreshold: 0.02 });
+  console.log("=== Recognition ===");
+  recognise({ patternType: 2, sseThreshold: 0.02 });
 }
