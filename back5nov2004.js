@@ -55,16 +55,16 @@ function sigmoid(x) {
 //   pesos1[i][j]  input layer  → first layer   (ia-1) × ia
 //   pesos2[i][j]  first layer  → hidden layer   ib    × (ia-1)
 //   pesos3[i][j]  hidden layer → output layer   ic    × ib
-// Sub-arrays are empty; JS creates slots on first assignment.
+// Arrays created dynamically in JavaScript.
 // ─────────────────────────────────────────────────────────────
-const pesos1 = Array.from({ length: ia }, () => []); // [1..ia-1][1..ia]
-const pesos2 = Array.from({ length: ib + 1 }, () => []); // [1..ib]  [1..ia-1]
-const pesos3 = Array.from({ length: ic + 1 }, () => []); // [1..ic]  [1..ib]
+const pesos1 = []; // [1..ia-1][1..ia]
+const pesos2 = []; // [1..ib]  [1..ia-1]
+const pesos3 = []; // [1..ic]  [1..ib]
 
-// Adjustments — fully recomputed each iteration, no need to pre-fill
-const ajustew1 = Array.from({ length: ia }, () => []);
-const ajustew2 = Array.from({ length: ib + 1 }, () => []);
-const ajustew3 = Array.from({ length: ic + 1 }, () => []);
+// Adjustments — created dynamically
+const ajustew1 = [];
+const ajustew2 = [];
+const ajustew3 = [];
 
 // Training patterns: vector[n][l][j]  n∈{1,2}, l∈[1..10], j∈[1..ia]
 const vector = [
@@ -99,6 +99,7 @@ const delta3 = [];
 // pesos1 : (ia-1) × ia
 for (let j = 1; j <= ia; j++) {
   for (let i = 1; i <= ia - 1; i++) {
+    if (!pesos1[i]) pesos1[i] = [];
     const sr = rnd001(1);
     const s = sr < 0.5 ? -1 : 1;
     pesos1[i][j] = rnd001(1) * 0.3 * s;
@@ -108,6 +109,7 @@ for (let j = 1; j <= ia; j++) {
 // pesos2 : ib × (ia-1)
 for (let j = 1; j <= ia - 1; j++) {
   for (let i = 1; i <= ib; i++) {
+    if (!pesos2[i]) pesos2[i] = [];
     const sr = rnd001(1);
     const s = sr < 0.5 ? -1 : 1;
     pesos2[i][j] = rnd001(1) * 0.3 * s;
@@ -117,6 +119,7 @@ for (let j = 1; j <= ia - 1; j++) {
 // pesos3 : ic × ib
 for (let j = 1; j <= ib; j++) {
   for (let i = 1; i <= ic; i++) {
+    if (!pesos3[i]) pesos3[i] = [];
     const sr = rnd001(1);
     const s = sr < 0.5 ? -1 : 1;
     pesos3[i][j] = rnd001(1) * 0.3 * s;
@@ -265,6 +268,7 @@ function train({ maxEpochs = 100000, targetSSE = 0.005 } = {}) {
       // Adjustments pesos3  (hidden → output)
       for (let i = 1; i <= ib + 1; i++) {
         for (let j = 1; j <= ic; j++) {
+          if (!ajustew3[j]) ajustew3[j] = [];
           ajustew3[j][i] = eta * delta3[j] * y2[i];
         }
       }
@@ -272,6 +276,7 @@ function train({ maxEpochs = 100000, targetSSE = 0.005 } = {}) {
       // Adjustments pesos2  (first → hidden)
       for (let i = 1; i <= ia - 1; i++) {
         for (let j = 1; j <= ib + 1; j++) {
+          if (!ajustew2[j]) ajustew2[j] = [];
           ajustew2[j][i] = eta * delta2[j] * y1[i];
         }
       }
@@ -279,6 +284,7 @@ function train({ maxEpochs = 100000, targetSSE = 0.005 } = {}) {
       // Adjustments pesos1  (input → first)
       for (let j = 1; j <= ia - 1; j++) {
         for (let i = 1; i <= ia; i++) {
+          if (!ajustew1[j]) ajustew1[j] = [];
           ajustew1[j][i] = eta * delta1[j] * vector[n][l][i];
         }
       }
